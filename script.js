@@ -10,8 +10,9 @@ async function getUser(username) {
 
         createUserCard(data)
         getRepos(username)
-    } catch(err) {
-        if(err.response.status == 404) {
+    } catch (err) {
+        console.log(err)
+        if (err.response.status == 404) {
             createErrorCard('No profile with this username')
         }
     }
@@ -22,7 +23,7 @@ async function getRepos(username) {
         const { data } = await axios(APIURL + username + '/repos?sort=created')
 
         addReposToCard(data)
-    } catch(err) {
+    } catch (err) {
         createErrorCard('Problem fetching repos')
     }
 }
@@ -49,7 +50,7 @@ function createUserCard(user) {
   </div>
     `
     main.innerHTML = cardHTML
-    
+
 }
 
 function createErrorCard(msg) {
@@ -62,11 +63,14 @@ function createErrorCard(msg) {
     main.innerHTML = cardHTML
 }
 
-function addReposToCard(repos) {
+function addReposToCard(repos, mode = "PART") {
     const reposEl = document.getElementById('repos')
-
+    var newpos = repos
+    if (mode == "PART") {
+        repos = repos.slice(0, 5)
+    }
+    reposEl.innerHTML = ""
     repos
-        .slice(0, 5)
         .forEach(repo => {
             const repoEl = document.createElement('a')
             repoEl.classList.add('repo')
@@ -76,6 +80,27 @@ function addReposToCard(repos) {
 
             reposEl.appendChild(repoEl)
         })
+    if (mode === "PART") {
+        const repoEl = document.createElement('a')
+        repoEl.classList.add('repo')
+        repoEl.href = ""
+        repoEl.onclick = (e) => {
+            e.preventDefault();
+            addReposToCard(newpos, "FULL")
+        }
+        repoEl.innerText = "View more ..."
+        reposEl.appendChild(repoEl)
+    } else {
+        const repoEl = document.createElement('a')
+        repoEl.classList.add('repo')
+        repoEl.href = ""
+        repoEl.onclick = (e) => {
+            e.preventDefault();
+            addReposToCard(newpos, "PART")
+        }
+        repoEl.innerText = "Show less ..."
+        reposEl.appendChild(repoEl)
+    }
 }
 
 form.addEventListener('submit', (e) => {
@@ -83,7 +108,7 @@ form.addEventListener('submit', (e) => {
 
     const user = search.value
 
-    if(user) {
+    if (user) {
         getUser(user)
 
         search.value = ''
